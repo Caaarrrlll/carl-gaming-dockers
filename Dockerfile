@@ -7,7 +7,8 @@ RUN apt-get update && \
 	apt-get -y install --no-install-recommends lib32gcc-s1 lib32stdc++6 lib32z1 screen xvfb winbind && \
 	rm -rf /var/lib/apt/lists/*
 
-ENV DATA_DIR="/serverdata"
+ENV DATA_DIR="/serverdata" \
+	XDG_RUNTIME_DIR=/tmp
 
 ENV STEAMCMD_DIR="${DATA_DIR}/steamcmd" \
 	SERVER_DIR="${DATA_DIR}/serverfiles"
