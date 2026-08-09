@@ -26,8 +26,8 @@ fi
 
 LOGIN_CREDENTIALS="anonymous"
 if [[ -n "${STEAM_USERNAME}" && "${STEAM_USERNAME}" != "" ]] && \
-   [[ -n "${STEAM_PASSWORD}" && "${STEAM_PASSWORD}" != "" ]]; then    
-    LOGIN_CREDENTIALS="${STEAM_USERNAME} ${STEAM_PASSWORD}"
+   [[ -n "${STEAM_PASSWRD}" && "${STEAM_PASSWRD}" != "" ]]; then    
+    LOGIN_CREDENTIALS="${STEAM_USERNAME} ${STEAM_PASSWRD}"
 fi
 
 if [ ! -f ${STEAMCMD_DIR}/steamcmd.sh ]; then
