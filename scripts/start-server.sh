@@ -43,13 +43,10 @@ echo "---Update SteamCMD---"
   +quit
 
 VALIDATE_CMD=""
-if [[ "${VALIDATE}" == "true" ]]; then
-    VALIDATE_CMD="validate"
-fi
-
 echo "---Update Server---"
 if [ "${VALIDATE}" == "true" ]; then
   echo "---Validating installation---"
+  VALIDATE_CMD="validate"
 fi
   ${STEAMCMD_DIR}/steamcmd.sh \
   +@sSteamCmdForcePlatformType windows \
