@@ -43,10 +43,16 @@
 
 ## Known issues / follow-ups
 
-- Default game passwords are baked into the Dockerfile (`SRV_PWD="Docker"`,
-  `SRV_ADMIN_PWD="adminDocker"`); require them via Unraid/env instead.
-- With `DEBUG=1`, `start-server.sh` prints `SRV_PWD`, `SRV_ADMIN_PWD`,
-  `LOGIN_CREDENTIALS`, and `ARK_RUN_STRING` (contains passwords) to the log.
+- **Accepted:** default game passwords are baked into the Dockerfile
+  (`SRV_PWD="Docker"`, `SRV_ADMIN_PWD="adminDocker"`). This image targets
+  Unraid, whose template supplies both values at container creation, so the
+  defaults are placeholders rather than usable credentials. Revisit if the
+  image is ever offered outside Unraid.
+- **Accepted:** with `DEBUG=1`, `start-server.sh` prints `SRV_PWD`,
+  `SRV_ADMIN_PWD`, `LOGIN_CREDENTIALS`, and `ARK_RUN_STRING` (contains
+  passwords) to the log. `DEBUG` defaults to `0`, and the log is only visible to
+  someone already logged in to their own Unraid host. Do not enable `DEBUG=1`
+  on a shared or publicly accessible system.
 - `org.opencontainers.image.source` points at `docker-steamcmd-server`, not this
   repo.
 - README run example references `caaarrrlll/ark-ascended-proton:latest`; actual

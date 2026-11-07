@@ -1,0 +1,81 @@
+name: Build and push images
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed images
+        id: changes
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            debian:
+              - 'images/debian-base/**'
+            fedora:
+              - 'images/fedora-base/**'
+            wine:
+              - 'images/wine-base/**'
+            asa:
+              - 'images/asa-docker/**'
+            workflow:
+              - '.github/workflows/build-images.yml'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Debian base
+        if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.debian == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: images/debian-base
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/debian-slim-baseimage:trixie-latest
+
+      - name: Build and push Fedora base
+        if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.fedora == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: images/fedora-base
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/fedora-baseimage:latest
+
+      - name: Build and push Wine base
+        if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.debian == 'true' || steps.changes.outputs.wine == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: images/wine-base
+          pull: true
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/wine-baseimage:latest
+
+      - name: Build and push ASA
+        if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.debian == 'true' || steps.changes.outputs.wine == 'true' || steps.changes.outputs.asa == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: images/asa-docker
+          pull: true
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/asa-wine:latest

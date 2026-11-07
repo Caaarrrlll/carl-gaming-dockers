@@ -4,7 +4,7 @@ Goal: consolidate the four image repositories under this folder into a single
 GitHub monorepo, `carl-gaming-dockers`, while keeping the existing Docker Hub
 images and build flow working.
 
-## Current state
+## Original state (pre-migration)
 
 | Path | Remote | Image |
 |---|---|---|
@@ -13,8 +13,53 @@ images and build flow working.
 | `wine-baseimage/` | `Caaarrrlll/wine-baseimage` | `caaarrrlll/wine-baseimage:latest` |
 | `docker-steamcmd/` | `Caaarrrlll/docker-steamcmd` | `caaarrrlll/asa-wine:latest` |
 
-Each path is currently an independent git repository. The workspace root is not
-a git repository.
+Before migration each path was an independent git repository and the workspace
+root was not a git repository.
+
+## Current state
+
+The monorepo exists at `Caaarrrlll/carl-gaming-dockers` and `main` is pushed to
+`origin`. Images were imported with `git subtree` and the current layout is:
+
+```
+carl-gaming-dockers/
+├─ .github/
+│  └─ workflows/
+│     └─ build-images.yml
+├─ docs/
+│  ├─ discussion.md
+│  └─ monorepo-plan.md
+├─ images/
+│  ├─ debian-base/
+│  ├─ fedora-base/
+│  ├─ wine-base/
+│  └─ asa-docker/
+├─ scripts/
+│  ├─ docker-updater.bat
+│  └─ docker-updater.sh
+├─ .gitignore
+├─ AGENTS.md
+├─ README.md
+└─ dockers.code-workspace
+```
+
+Each image still has an `audit.md`. The local build scripts require
+`DOCKERHUB_USER`; CI uses the `DOCKERHUB_USERNAME` secret instead.
+
+## Migration status
+
+- [x] Phase 0.1 — secret/hygiene scan (no credentials found)
+- [x] Phase 0.2 — redact private LAN details in `docs/discussion.md`
+- [x] Phase 0.3 — accepted: game password defaults are overridden by the Unraid template and `DEBUG=0` by default
+- [x] Phase 1 — back up and verify remotes (recheck the backup still exists)
+- [x] Phase 2 — create the monorepo layout
+- [x] Phase 3 — import image histories with `git subtree`
+- [x] Phase 4 — add the root `.gitignore`
+- [x] Phase 5.1 — add the CI workflow file
+- [ ] Phase 5.2 — configure secrets and get a successful CI run
+- [x] Phase 6 — push the monorepo to `origin/main`
+- [ ] Phase 6.1 — verify CI builds and `docker pull` of every tag
+- [ ] Phase 7 — retire the original repositories
 
 ## Phase 0 — Secret / hygiene audit (do this first)
 
@@ -34,6 +79,13 @@ consolidation:
    hostname `<hostname>`. Not a credential, but move it to `docs/` and consider
    redacting before publishing publicly.
 4. No repo has a `.gitignore`. Add one at the monorepo root.
+
+Decision (2026-11-07): items 1 and 2 are **accepted as-is**. The image targets
+Unraid, where the template supplies `SRV_PWD` and `SRV_ADMIN_PWD` at container
+creation time regardless of the Dockerfile defaults. `DEBUG` defaults to `0`, so
+secret logging only happens if an operator explicitly enables it, and the output
+is only visible to someone already logged in to their own Unraid host. Revisit
+if this image is ever offered as a standalone/non-Unraid container.
 
 Recommended verification before publishing:
 
@@ -58,7 +110,7 @@ verified.
 
 ## Phase 2 — Proposed monorepo layout
 
-Create a new GitHub repository (`carl-gaming-dockers`) and lay it out as:
+**Status:** done (see "Current state" above). The original target layout was:
 
 ```
 carl-gaming-dockers/
@@ -80,19 +132,25 @@ carl-gaming-dockers/
 │     ├─ scripts/
 │     └─ asa.png
 ├─ scripts/
-│  └─ docker-updater.bat
+│  ├─ docker-updater.bat
+│  └─ docker-updater.sh
 ├─ .gitignore
 ├─ AGENTS.md
 ├─ README.md
 └─ dockers.code-workspace
 ```
 
+`docs/unraid-template.md` was not imported; add it if the Unraid template is
+still kept elsewhere. Per-image `audit.md` files were added on top of the
+imported contents.
+
 Dockerfiles reference published image tags (`caaarrrlll/...`), not relative
 paths, so moving folders does not change the build graph.
 
 ## Phase 3 — Create the monorepo and preserve history
 
-`git subtree` keeps each repo's commit history under a subdirectory.
+**Status:** done. `git subtree` keeps each repo's commit history under a
+subdirectory.
 
 ```powershell
 cd E:\Code
@@ -130,6 +188,8 @@ Update paths for the new layout:
 
 ## Phase 4 — Root `.gitignore`
 
+**Status:** done. Current contents:
+
 ```gitignore
 # Secrets / local config
 .env
@@ -161,67 +221,39 @@ serverdata/
 
 ## Phase 5 — GitHub Actions build pipeline
 
-Replace the local `docker-updater.bat` for releases with CI. The chain must build
-in dependency order (debian → wine → asa-docker); Fedora is independent.
+**Status:** workflow added at `.github/workflows/build-images.yml`; repository
+secrets and the first CI run are still pending.
 
-`.github/workflows/build-images.yml` (skeleton):
+CI replaces the local `docker-updater` scripts for releases. The workflow runs
+all builds as sequential steps in one job, so the Debian → Wine → ASA order is
+guaranteed and a failed step stops the chain. It uses `dorny/paths-filter` to
+rebuild only the affected images:
 
-```yaml
-name: Build and push images
+| Changed path | Images rebuilt, in order |
+|---|---|
+| `images/debian-base/**` | debian → wine → asa |
+| `images/fedora-base/**` | fedora (independent) |
+| `images/wine-base/**` | wine → asa |
+| `images/asa-docker/**` | asa |
+| workflow file, tag push, or manual dispatch | all images |
 
-on:
-  push:
-    branches: [main]
-    tags: ["v*"]
-  workflow_dispatch:
+The dependent builds use `pull: true`, so Wine pulls the Debian image that was
+just pushed, and ASA pulls the just-pushed Wine image.
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+Required repository configuration:
 
-      - name: Debian base
-        uses: docker/build-push-action@v6
-        with:
-          context: images/debian-base
-          push: true
-          tags: caaarrrlll/debian-slim-baseimage:trixie-latest
+- Secret `DOCKERHUB_USERNAME` — Docker Hub username (`caaarrrlll`).
+- Secret `DOCKERHUB_TOKEN` — Docker Hub access token with Read & Write scope,
+  not the account password.
 
-      - name: Fedora base
-        uses: docker/build-push-action@v6
-        with:
-          context: images/fedora-base
-          push: true
-          tags: caaarrrlll/fedora-baseimage:latest
-
-      - name: Wine base
-        uses: docker/build-push-action@v6
-        with:
-          context: images/wine-base
-          pull: true
-          push: true
-          tags: caaarrrlll/wine-baseimage:latest
-
-      - name: ASA Docker / ARK ASA
-        uses: docker/build-push-action@v6
-        with:
-          context: images/asa-docker
-          pull: true
-          push: true
-          tags: caaarrrlll/asa-wine:latest
-```
-
-Add repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (Docker Hub
-access token, not the account password). The `pull: true` on dependent images
-ensures CI uses the just-pushed base images.
+Keep `DOCKERHUB_USERNAME` scoped to this repository. It replaces the namespace
+in the CI tags, while the Dockerfiles still use `FROM caaarrrlll/...` on
+purpose so the chain builds on the published base images.
 
 ## Phase 6 — Push and verify
+
+**Status:** the monorepo has been pushed to `origin/main`. CI and published
+image verification are still pending.
 
 ```powershell
 cd E:\Code\carl-gaming-dockers
@@ -232,17 +264,60 @@ git push -u origin main
 
 Verify:
 
-- All four workflows' build steps pass.
+- The `Build and push images` workflow passes.
 - `docker pull` of each tag returns the expected image.
 - The Unraid container still starts with the published `caaarrrlll/asa-wine:latest`.
 
 ## Phase 7 — Retire the old repositories
+
+**Status:** pending, blocked on a successful CI run and image verification.
 
 After the monorepo is confirmed working:
 
 - Add a note to each old repo's README: "Moved to `Caaarrrlll/carl-gaming-dockers`".
 - Optionally archive the old repos in GitHub settings.
 - Keep the old tags/releases until dependent deployments have migrated.
+
+## Phase 8 — Future: group images into `systems/` and `games/`
+
+**Status:** proposal, not scheduled. Do this after CI is green.
+
+As more game images are added, split runtime bases from game workloads:
+
+```
+images/
+├─ systems/
+│  ├─ debian-base/
+│  ├─ fedora-base/
+│  └─ wine-base/
+└─ games/
+   └─ asa-docker/
+```
+
+This makes the dependency chain clearer (`systems` builds the runtime that
+`games` layers on) and makes the repo easier to grow without scanning a flat
+`images/` directory. The Dockerfiles reference published image tags, not
+relative paths, so the build graph itself does not change.
+
+Perform the move as one atomic commit and update every path reference:
+
+- `scripts/docker-updater.sh` and `.bat` build contexts.
+- `dockers.code-workspace` folder paths.
+- `.github/workflows/build-images.yml` contexts and `paths-filter` patterns.
+- `README.md`, `AGENTS.md`, and per-image `audit.md` paths.
+
+Do not mix the move with content changes; that makes the history harder to
+follow.
+
+## Next steps
+
+1. Run `Build and push images` manually once and confirm the full chain passes
+   (repository secrets are now configured).
+2. Push a small change under `images/debian-base/` and confirm CI rebuilds
+   debian → wine → asa only.
+3. Verify the Unraid container still starts from `caaarrrlll/asa-wine:latest`.
+4. Retire the old repositories (Phase 7).
+5. Consider the `systems/` + `games/` reorganisation (Phase 8).
 
 ## Alternatives
 

@@ -4,10 +4,18 @@ setlocal
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%\.."
 
-call :buildpush "images\debian-base" "caaarrrlll/debian-slim-baseimage:trixie-latest" || goto error
-call :buildpush "images\fedora-base" "caaarrrlll/fedora-baseimage:latest" || goto error
-call :buildpush "images\wine-base" "caaarrrlll/wine-baseimage:latest" || goto error
-call :buildpush "images\asa-docker" "caaarrrlll/asa-wine:latest" || goto error
+if not defined DOCKERHUB_USER (
+    echo.
+    echo Error: DOCKERHUB_USER is not set.
+    echo Set it to your Docker Hub username, e.g. set DOCKERHUB_USER=myuser
+    endlocal
+    exit /b 1
+)
+
+call :buildpush "images\debian-base" "%DOCKERHUB_USER%/debian-slim-baseimage:trixie-latest" || goto error
+call :buildpush "images\fedora-base" "%DOCKERHUB_USER%/fedora-baseimage:latest" || goto error
+call :buildpush "images\wine-base" "%DOCKERHUB_USER%/wine-baseimage:latest" || goto error
+call :buildpush "images\asa-docker" "%DOCKERHUB_USER%/asa-wine:latest" || goto error
 goto end
 
 :buildpush
