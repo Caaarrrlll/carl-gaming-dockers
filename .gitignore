@@ -1,0 +1,26 @@
+# Secrets / local config
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+.docker/config.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Build / runtime data
+*.log
+serverdata/

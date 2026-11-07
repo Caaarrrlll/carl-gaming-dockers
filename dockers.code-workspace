@@ -1,0 +1,54 @@
+{
+	"folders": [
+		{
+			"name": "Workspace (root)",
+			"path": "."
+		},
+		{
+			"name": "Debian Base Image",
+			"path": "images/debian-base"
+		},
+		{
+			"name": "Fedora Base Image",
+			"path": "images/fedora-base"
+		},
+		{
+			"name": "Wine Base Image",
+			"path": "images/wine-base"
+		},
+		{
+			"name": "ASA Docker / ARK: Survival Ascended",
+			"path": "images/asa-docker"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.git": true
+		},
+		"search.exclude": {
+			"**/.git": true
+		},
+		"terminal.integrated.defaultProfile.windows": "PowerShell",
+		"docker.commands.build": "docker image build -t ${tag} .",
+		"docker.commands.run": "docker run --rm -d ${exposedPorts} ${tag}"
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "Docker: Build & Push All",
+				"type": "shell",
+				"command": ".\\scripts\\docker-updater.bat",
+				"options": {
+					"cwd": "${workspaceFolder:Workspace (root)}"
+				},
+				"problemMatcher": [],
+				"presentation": {
+					"reveal": "always",
+					"panel": "dedicated",
+					"clear": true
+				}
+			}
+		]
+	}
+}
