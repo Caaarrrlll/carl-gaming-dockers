@@ -16,7 +16,8 @@
 - Installs `lib32gcc-s1`, `lib32stdc++6`, `lib32z1`, `screen`, `xvfb`, `winbind`.
 - Runs as user `steam` with configurable `UID`/`GID` (defaults `99`/`100`).
 - Stores data in `/serverdata` (`steamcmd/`, `serverfiles/`).
-- Defaults: map `TheIsland_WP`, ports `7777`/`27015`, `VALIDATE=0`, `DEBUG=0`.
+- Defaults: map `TheIsland_WP`, ports `7777`/`27015`, `VALIDATE=0`, `DEBUG=0`,
+  `NTSYNC=0`.
 - Entrypoint `/opt/scripts/start.sh`; server logic in `start-server.sh`.
 - Targets the Unraid Docker template format.
 
@@ -24,6 +25,7 @@
 
 | Date | Commit | Change | Notes |
 |---|---|---|---|
+| 2026-11-07 | _(this change)_ | add `NTSYNC` env flag | `start-server.sh` checks `/dev/ntsync` when `NTSYNC=1`, exports `WINENTSYNC=1`, warns and falls back to ESync/FSync when the device is missing; default `0` (disabled). Host must `modprobe ntsync` and pass `--device /dev/ntsync`. |
 | 2026-08-09 | `6c282ba` | change validation | |
 | 2026-08-09 | `8e3499d` | add steam validate | |
 | 2026-07-25 | `f104ee0` | add xdg folder | |
@@ -58,6 +60,11 @@
 - README run example references `caaarrrlll/ark-ascended-proton:latest`; actual
   image is `caaarrrlll/asa-wine:latest`.
 - `VALIDATE` is declared twice in the Dockerfile (`""` then `0`).
+- `NTSYNC=1` only helps when the host kernel provides the NTSYNC driver
+  (Linux 6.14+, i.e. Unraid 7.3+ on the target host) **and** the device is
+  passed to the container. Without it the container still starts and logs a
+  fallback warning — by design, since NTSYNC is an optional performance
+  feature.
 - No `.gitignore` in the repo.
 
 ## Audit checklist

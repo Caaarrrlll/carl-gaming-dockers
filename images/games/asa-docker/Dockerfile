@@ -19,7 +19,8 @@ ENV GAME_ID="2430930" \
 	SRV_PWD="Docker" \
 	SRV_ADMIN_PWD="adminDocker" \
 	VALIDATE="" \
-	DEBUG=0
+	DEBUG=0 \
+	NTSYNC=0
 
 ENV GAME_PARAMS="" \
 	GAME_PARAMS_EXTRA="-port=7777 -QueryPort=27015 -WinLiveMaxPlayers=20 -server -log -NoBattlEye" \

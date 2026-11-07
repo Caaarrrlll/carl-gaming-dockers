@@ -13,22 +13,27 @@
 ## Current snapshot
 
 - Enables the `i386` architecture.
-- Installs Debian-packaged `wine`, `wine64`, `libwine`, `fonts-wine`.
-- The WineHQ repository block is present but commented out.
+- Installs WineHQ `winehq-stable` (Wine 11.x) from the WineHQ Debian repo via
+  keyring/signed-by (no `gnupg2`, no `apt-key`; base image provides `wget` and
+  `ca-certificates`).
+- `PATH` includes `/opt/wine-stable/bin`.
+- Package caches are cleaned in the same layer.
 
 ## Change log
 
 | Date | Commit | Change | Notes |
 |---|---|---|---|
+| 2026-11-07 | _(this change)_ | switch to WineHQ `winehq-stable` | Debian's packaged Wine is `10.0` (confirmed in the running container), which predates NTSYNC support (Wine 10.4+/11). WineHQ stable is Wine 11.0 with NTSYNC highlights. Also fixes the missing apt cache cleanup. |
 | 2026-05-06 | `cf66d87` | newer wine | |
 | 2026-04-25 | `cf119f7` | wine wrapper | |
 
 ## Known issues / follow-ups
 
-- Uses Debian's packaged Wine, not WineHQ; Wine version is tied to the Debian
-  `trixie` archive.
-- The active install does not clean `/var/lib/apt/lists/*` (the cleanup line is
-  inside the commented-out block), so the image carries extra apt metadata.
+- Wine `wine --version` should verify as `wine-11.x` after the next build; if
+  WineHQ stable ever lags NTSYNC fixes, `winehq-devel` is the fallback.
+- The ASA image's `WINEPREFIX` (`/serverdata/serverfiles/WINE64`) was created
+  under Wine 10.0; Wine 11 upgrades the prefix on first run. Watch the first
+  container start after the update.
 - No `.gitignore` in the repo.
 
 ## Audit checklist

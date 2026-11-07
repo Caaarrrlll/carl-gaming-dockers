@@ -24,6 +24,32 @@ else
   sleep infinity
 fi
 
+echo "---Checking NTSYNC support...---"
+NTSYNC_WORKING=0
+if [ "${NTSYNC}" == "1" ]; then
+  if [ -c /dev/ntsync ]; then
+    export WINENTSYNC=1
+    NTSYNC_WORKING=1
+    echo "---NTSYNC enabled: /dev/ntsync is available, Wine will use it---"
+  else
+    echo
+    echo "+---ATTENTION---ATTENTION---ATTENTION---ATTENTION---ATTENTION---"
+    echo "| NTSYNC is enabled but /dev/ntsync was not found in the container."
+    echo "| Make sure the following runs on the host (e.g. from the go file):"
+    echo
+    echo "echo \"modprobe ntsync\" >> /boot/config/go"
+    echo
+    echo "| and that the container is started with '--device /dev/ntsync'"
+    echo "| (Unraid template: Extra Parameters)."
+    echo "|"
+    echo "| Falling back to ESync/FSync."
+    echo "+---ATTENTION---ATTENTION---ATTENTION---ATTENTION---ATTENTION---"
+    echo
+  fi
+else
+  echo "---NTSYNC disabled, Wine will use ESync/FSync---"
+fi
+
 LOGIN_CREDENTIALS="anonymous"
 if [[ -n "${STEAM_USERNAME}" && "${STEAM_USERNAME}" != "" ]] && \
    [[ -n "${STEAM_PASSWRD}" && "${STEAM_PASSWRD}" != "" ]]; then    
@@ -105,6 +131,7 @@ if [ ${DEBUG} -eq 1 ]; then
     echo "Cluster Info: ${SRV_CLUSTER_INFO}"
     echo "MOD IDs: ${SRV_MOD_IDS}"
     echo "ARK_RUN_STRING: ${ARK_RUN_STRING}"
+    echo "NTSYNC flag: ${NTSYNC} (working: ${NTSYNC_WORKING}, WINENTSYNC: ${WINENTSYNC:-0})"
 fi
 
 echo "---Start Server---"

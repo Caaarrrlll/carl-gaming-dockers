@@ -5,17 +5,11 @@ LABEL org.opencontainers.image.source="https://github.com/Caaarrrlll/wine-baseim
 LABEL org.opencontainers.image.licenses="MIT"
 
 RUN dpkg --add-architecture i386 && \
-    apt-get update && \
-	# apt -y install gnupg2 && \
-	# wget -qO /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
-	# echo "deb [signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/debian/ trixie main" | tee /etc/apt/sources.list.d/wine.list && \
-	# apt-get update && \
-	# apt -y install --no-install-recommends winehq-stable && \
-	# apt-get -y --purge remove gnupg2 && \
-	# apt-get -y autoremove && \
-	# rm -rf /var/lib/apt/lists/*
-	apt install -y \
-	wine \
-	wine64 \
-	libwine \
-	fonts-wine
+	mkdir -p /etc/apt/keyrings && \
+	wget -qO /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key && \
+	echo "deb [signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/debian/ trixie main" > /etc/apt/sources.list.d/wine.list && \
+	apt-get update && \
+	apt-get -y install --no-install-recommends winehq-stable && \
+	rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/opt/wine-stable/bin:${PATH}"

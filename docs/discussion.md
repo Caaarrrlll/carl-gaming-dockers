@@ -44,8 +44,10 @@
 | 7.3.3 (current stable, 2026-10-08) | **6.18.54** (LTS) | Recommended baseline |
 | 7.3.2 / 7.3.1 | 6.18.38 / 6.18.33 | 7.3 branch |
 | 7.4.0-beta.1 | 6.18.44 | Beta |
-| 7.2.8 | 6.12.98 | Older branch |
-| **7.2.9 (server, confirmed 2026-11-07)** | **6.12.90-Unraid** | Current server; **no NTSYNC** (predates 6.14) |
+| 7.2.8 / 7.2.9 | 6.12.98 / 6.12.90 | Older branch; **no NTSYNC** (predates 6.14) |
+
+**Current server:** Unraid **7.3.4 / kernel 6.18.58-Unraid** (updated
+2026-11-07, confirmed same day).
 
 - Unraid has moved from 6.6 → 6.12 → 6.18, all **LTS** lines.
 - 7.0 through 7.3 are **not** LTS, so Unraid is unlikely to adopt a 7.x kernel until a
@@ -66,9 +68,9 @@
 - Wine **11.0** added native support; Proton 11 / GE-Proton use it when available.
 - Verify on the host/container: `/dev/ntsync` exists and the module is loaded.
 - Because Unraid 7.3.x = 6.18.x, NTSYNC is already present there; only enable/load it.
-- **Important:** the server is currently on Unraid **7.2.9 / kernel 6.12.90**, which is
-  **older than 6.14**, so `ntsync` is **not available** until Unraid is updated to the
-  7.3.x branch (6.18.x).
+- **Done (2026-11-07):** the server was updated to Unraid **7.3.4 / kernel
+  6.18.58**, which is ≥ 6.14, so `ntsync` is now available on the host; still
+  needs `modprobe` + device passthrough (see Sections 5 and 6).
 
 ### 3.5 Container vs VM overhead
 
@@ -128,36 +130,36 @@ Version results to fill in:
 
 | Item | Value (record) |
 |---|---|
-| Unraid OS version | **7.2.9** |
-| Kernel (`uname -r`) | **6.12.90-Unraid** |
+| Unraid OS version | **7.3.4** (updated from 7.2.9 on 2026-11-07) |
+| Kernel (`uname -r`) | **6.18.58-Unraid** |
 | CPU | **AMD Ryzen 9 5950X (Zen 3, 16C/32T)** |
-| Docker engine | _(to confirm)_ |
-| `ntsync` module present | **No** — 6.12 predates NTSYNC (6.14); requires Unraid 7.3.x / 6.18.x |
-| `/dev/ntsync` present | **No** (expected absent on 6.12) |
+| Docker engine | **28.8.2** |
+| `ntsync` module present | **Yes** — `modprobe ntsync` succeeds on 6.18.58 (confirmed 2026-11-07) |
+| `/dev/ntsync` present | **Yes** — `crw-rw-rw- 10, 261` (confirmed 2026-11-07; disappears on reboot until persisted) |
 | GPU (if any) | _(to confirm; not required for a headless server)_ |
-| Wine version in container | _(to confirm)_ |
+| Wine version in container | **wine-10.0** (Debian 10.0~repack, confirmed 2026-11-07) — predates NTSYNC (10.4+); switched to WineHQ `winehq-stable` (Wine 11.0+) |
 | Game/server binary | _(to confirm)_ |
 
-Confirmed raw output (2026-11-07):
+Note: `/proc/config.gz` does not exist on Unraid (confirmed 2026-11-07), so the
+kernel-config check is not available — verify NTSYNC via `modprobe` +
+`ls -l /dev/ntsync` instead. Kernel 6.18.58 ≥ 6.14, so NTSYNC is expected to be
+built into the kernel or shipped as a module.
 
-```
-$ uname -a
-Linux <hostname> 6.12.90-Unraid #1 SMP PREEMPT_DYNAMIC Sun May 17 10:02:30 PDT 2026 x86_64 AMD Ryzen 9 5950X 16-Core Processor AuthenticAMD GNU/Linux
-
-Unraid version: 7.2.9
-```
-
-**Implication:** To get NTSYNC on the server, update Unraid from 7.2.9 (6.12.90) to the
-7.3.x branch (6.18.x LTS). Until then, Wine/Proton will fall back to FSync/ESync.
+**Implication:** The server was updated from Unraid 7.2.9 (6.12.90) to **7.3.4
+(6.18.58)** on 2026-11-07, so the NTSYNC prerequisite is met. Next: `modprobe
+ntsync`, confirm `/dev/ntsync`, persist it across reboots, and pass the device
+to the container.
 
 ## 6. Recommended container approach
 
 1. Base image: prefer `debian:trixie-slim` (small; userland on 6.18 host works fine).
-2. Install a recent Wine (WineHQ repo, Wine 11+) or run the server via Proton/umu as
-   appropriate for the game.
-3. **Prerequisite:** update Unraid from 7.2.9 (6.12.90) to 7.3.x (6.18.x) to obtain
-   NTSYNC. Then on the Unraid host, load NTSYNC and persist it, then pass the device to
-   the container:
+2. Use a recent Wine with NTSYNC support: the image was switched to the WineHQ
+   repo (`winehq-stable` = Wine 11.0+, released 2026-01-13 with NTSYNC as a
+   headline feature). Decision: plain Wine via WineHQ, **not** Proton — Proton
+   required Steam logins and caused issues in the early Docker builds.
+3. **Done (2026-11-07):** Unraid was updated from 7.2.9 (6.12.90) to 7.3.4
+   (6.18.58), which provides NTSYNC. Remaining on the Unraid host, load NTSYNC
+   and persist it, then pass the device to the container:
 
    ```bash
    # on Unraid host
@@ -170,6 +172,12 @@ Unraid version: 7.2.9
    ```bash
    --device /dev/ntsync
    ```
+
+   As of 2026-11-07 the `caaarrrlll/asa-wine` image has a built-in
+   `NTSYNC` flag for this: set `NTSYNC=1` and the container validates
+   `/dev/ntsync` on start, exports `WINENTSYNC=1`, and falls back to
+   ESync/FSync with a log warning when the device is missing (see
+   `images/games/asa-docker/`).
 
 4. Publish only the game server port(s) the Windows client needs.
 5. Confirm whether the specific game server binary actually benefits from NTSYNC; for
@@ -190,10 +198,15 @@ Unraid version: 7.2.9
 ## 8. Open questions / next steps
 
 - [x] Record actual Unraid kernel / OS versions: 7.2.9 / 6.12.90-Unraid (Section 5).
-- [ ] Record Docker engine version on the server.
-- [ ] Update Unraid 7.2.9 → 7.3.x to get kernel 6.18.x + NTSYNC (back up flash first).
-- [ ] After update, confirm `ntsync` is available (`/dev/ntsync`).
-- [ ] Decide Wine vs Proton/umu for the specific game server binary.
+- [x] Record Docker engine version on the server: **28.8.2**.
+- [x] Update Unraid 7.2.9 → 7.3.4 (done 2026-11-07): kernel 6.18.58-Unraid, Docker 28.8.2.
+- [x] After update, confirm `ntsync` is available: `modprobe ntsync` succeeds and
+  `/dev/ntsync` exists (2026-11-07).
+- [ ] Persist `modprobe ntsync` across reboots (`/boot/config/go` or User Scripts;
+  check for duplicates first).
+- [x] Decide Wine vs Proton/umu for the specific game server binary: plain Wine
+  via the WineHQ repo (`winehq-stable`, Wine 11.0+); no Proton (requires Steam
+  logins).
 - [ ] Confirm which game/server binary this is.
 - [ ] Validate whether NTSYNC measurably helps that server binary.
 - [ ] Finalize the container image (Dockerfile) and Unraid template.

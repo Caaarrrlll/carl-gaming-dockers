@@ -25,7 +25,6 @@ Supporting files:
 - `scripts/docker-updater.bat` — builds and pushes all images (Windows).
 - `scripts/docker-updater.sh` — builds and pushes all images (Linux/macOS).
 - `docs/discussion.md` — Wine/Proton on Unraid, kernel/NTSYNC notes.
-- `docs/monorepo-plan.md` — how this repo was assembled / migration plan.
 - `images/*/*/audit.md` — per-image snapshot, change log, and review checklist.
 
 ## Image dependency chain

@@ -15,6 +15,8 @@ This Docker will download and install SteamCMD along with Ark Ascended
 | VALIDATE | Validates the game data | blank |
 | USERNAME | Leave blank for anonymous login | blank |
 | PASSWRD | Leave blank for anonymous login | blank |
+| DEBUG | Prints troubleshooting information to the log when set to 1 | 0 |
+| NTSYNC | When set to 1, uses the Linux ntsync driver for Wine. Requires the container to be started with '--device /dev/ntsync' and 'modprobe ntsync' to run on the host (Unraid 7.3+/kernel 6.14+). Falls back to ESync/FSync with a log warning if the device is missing. | 0 |
 
 ## Run example for Ark Ascended
 ```

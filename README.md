@@ -68,7 +68,7 @@ the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
 - `images/systems/` — shared runtime/base images.
 - `images/games/` — per-game images layered on the system images.
 - `scripts/` — build/push helpers.
-- `docs/` — design notes and migration plan.
+- `docs/` — design notes.
 - `AGENTS.md` — contributor/agent overview.
 
 Each image directory has an `audit.md` tracking its snapshot and changes.
