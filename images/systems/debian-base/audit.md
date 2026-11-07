@@ -7,7 +7,7 @@
 | Source repo | `Caaarrrlll/docker-debian-baseimage` |
 | Docker Hub image | `caaarrrlll/debian-slim-baseimage:trixie-latest` |
 | Base image | `debian:trixie-slim` |
-| Build context | `docker-debian-baseimage/` |
+| Build context | `images/systems/debian-base/` |
 | Last audited | 2026-11-07 |
 
 ## Current snapshot

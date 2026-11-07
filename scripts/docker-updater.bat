@@ -12,10 +12,10 @@ if not defined DOCKERHUB_USER (
     exit /b 1
 )
 
-call :buildpush "images\debian-base" "%DOCKERHUB_USER%/debian-slim-baseimage:trixie-latest" || goto error
-call :buildpush "images\fedora-base" "%DOCKERHUB_USER%/fedora-baseimage:latest" || goto error
-call :buildpush "images\wine-base" "%DOCKERHUB_USER%/wine-baseimage:latest" || goto error
-call :buildpush "images\asa-docker" "%DOCKERHUB_USER%/asa-wine:latest" || goto error
+call :buildpush "images\systems\debian-base" "%DOCKERHUB_USER%/debian-slim-baseimage:trixie-latest" || goto error
+call :buildpush "images\systems\fedora-base" "%DOCKERHUB_USER%/fedora-baseimage:latest" || goto error
+call :buildpush "images\systems\wine-base" "%DOCKERHUB_USER%/wine-baseimage:latest" || goto error
+call :buildpush "images\games\asa-docker" "%DOCKERHUB_USER%/asa-wine:latest" || goto error
 goto end
 
 :buildpush

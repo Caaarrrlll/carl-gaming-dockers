@@ -5,6 +5,11 @@ on:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      build_fedora:
+        description: Also build and push the Fedora base image
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,13 +32,13 @@ jobs:
         with:
           filters: |
             debian:
-              - 'images/debian-base/**'
+              - 'images/systems/debian-base/**'
             fedora:
-              - 'images/fedora-base/**'
+              - 'images/systems/fedora-base/**'
             wine:
-              - 'images/wine-base/**'
+              - 'images/systems/wine-base/**'
             asa:
-              - 'images/asa-docker/**'
+              - 'images/games/asa-docker/**'
             workflow:
               - '.github/workflows/build-images.yml'
 
@@ -50,15 +55,15 @@ jobs:
         if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.debian == 'true' || steps.changes.outputs.workflow == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: images/debian-base
+          context: images/systems/debian-base
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/debian-slim-baseimage:trixie-latest
 
       - name: Build and push Fedora base
-        if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.fedora == 'true' || steps.changes.outputs.workflow == 'true'
+        if: steps.changes.outputs.fedora == 'true' || (github.event_name == 'workflow_dispatch' && inputs.build_fedora)
         uses: docker/build-push-action@v6
         with:
-          context: images/fedora-base
+          context: images/systems/fedora-base
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/fedora-baseimage:latest
 
@@ -66,7 +71,7 @@ jobs:
         if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.debian == 'true' || steps.changes.outputs.wine == 'true' || steps.changes.outputs.workflow == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: images/wine-base
+          context: images/systems/wine-base
           pull: true
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wine-baseimage:latest
@@ -75,7 +80,7 @@ jobs:
         if: (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')) || steps.changes.outputs.debian == 'true' || steps.changes.outputs.wine == 'true' || steps.changes.outputs.asa == 'true' || steps.changes.outputs.workflow == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: images/asa-docker
+          context: images/games/asa-docker
           pull: true
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/asa-wine:latest

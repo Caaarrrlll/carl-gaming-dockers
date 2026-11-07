@@ -56,7 +56,8 @@ Each image still has an `audit.md`. The local build scripts require
 - [x] Phase 3 — import image histories with `git subtree`
 - [x] Phase 4 — add the root `.gitignore`
 - [x] Phase 5.1 — add the CI workflow file
-- [ ] Phase 5.2 — configure secrets and get a successful CI run
+- [x] Phase 5.2 — configure repository secrets
+- [ ] Phase 5.3 — get a successful CI run
 - [x] Phase 6 — push the monorepo to `origin/main`
 - [ ] Phase 6.1 — verify CI builds and `docker pull` of every tag
 - [ ] Phase 7 — retire the original repositories
@@ -235,7 +236,12 @@ rebuild only the affected images:
 | `images/fedora-base/**` | fedora (independent) |
 | `images/wine-base/**` | wine → asa |
 | `images/asa-docker/**` | asa |
-| workflow file, tag push, or manual dispatch | all images |
+| workflow file, tag push, or manual dispatch | debian → wine → asa |
+| manual dispatch with `build_fedora` enabled | adds fedora |
+
+Fedora is deliberately excluded from the normal chain to save GitHub Actions
+minutes because the image is not currently used. It still builds when its own
+files change, or when the `build_fedora` checkbox is selected on a manual run.
 
 The dependent builds use `pull: true`, so Wine pulls the Debian image that was
 just pushed, and ASA pulls the just-pushed Wine image.
@@ -318,6 +324,8 @@ follow.
 3. Verify the Unraid container still starts from `caaarrrlll/asa-wine:latest`.
 4. Retire the old repositories (Phase 7).
 5. Consider the `systems/` + `games/` reorganisation (Phase 8).
+6. Re-enable automatic Fedora CI when the image is actively used again
+   (`build_fedora` currently defaults to `false` to save Actions job time).
 
 ## Alternatives
 

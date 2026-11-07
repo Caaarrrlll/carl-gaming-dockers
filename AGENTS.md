@@ -13,10 +13,10 @@ It was created by importing the original per-image repositories with
 
 | Path | Image | Purpose |
 |---|---|---|
-| `images/debian-base/` | `caaarrrlll/debian-slim-baseimage:trixie-latest` | Slim Debian base image |
-| `images/fedora-base/` | `caaarrrlll/fedora-baseimage:latest` | Slim Fedora base image (independent) |
-| `images/wine-base/` | `caaarrrlll/wine-baseimage:latest` | Wine layered on the Debian base |
-| `images/asa-docker/` | `caaarrrlll/asa-wine:latest` | SteamCMD + ARK: Survival Ascended, layered on Wine |
+| `images/systems/debian-base/` | `caaarrrlll/debian-slim-baseimage:trixie-latest` | Slim Debian base image |
+| `images/systems/fedora-base/` | `caaarrrlll/fedora-baseimage:latest` | Slim Fedora base image (independent) |
+| `images/systems/wine-base/` | `caaarrrlll/wine-baseimage:latest` | Wine layered on the Debian base |
+| `images/games/asa-docker/` | `caaarrrlll/asa-wine:latest` | SteamCMD + ARK: Survival Ascended, layered on Wine |
 
 Supporting files:
 
@@ -26,18 +26,18 @@ Supporting files:
 - `scripts/docker-updater.sh` — builds and pushes all images (Linux/macOS).
 - `docs/discussion.md` — Wine/Proton on Unraid, kernel/NTSYNC notes.
 - `docs/monorepo-plan.md` — how this repo was assembled / migration plan.
-- `images/*/audit.md` — per-image snapshot, change log, and review checklist.
+- `images/*/*/audit.md` — per-image snapshot, change log, and review checklist.
 
 ## Image dependency chain
 
 ```
 debian:trixie-slim
-  └─ caaarrrlll/debian-slim-baseimage:trixie-latest   (images/debian-base)
-       └─ caaarrrlll/wine-baseimage:latest            (images/wine-base)
-            └─ caaarrrlll/asa-wine:latest             (images/asa-docker, ARK ASA)
+  └─ caaarrrlll/debian-slim-baseimage:trixie-latest   (images/systems/debian-base)
+       └─ caaarrrlll/wine-baseimage:latest            (images/systems/wine-base)
+            └─ caaarrrlll/asa-wine:latest             (images/games/asa-docker, ARK ASA)
 
 fedora:44
-  └─ caaarrrlll/fedora-baseimage:latest               (images/fedora-base)
+  └─ caaarrrlll/fedora-baseimage:latest               (images/systems/fedora-base)
 ```
 
 Build order matters for the Debian → Wine → ASA chain: rebuild and push the base
@@ -72,15 +72,16 @@ namespace is being pushed to.
 To rebuild a single image manually:
 
 ```powershell
-docker image build -t caaarrrlll/wine-baseimage:latest .\images\wine-base
+docker image build -t caaarrrlll/wine-baseimage:latest .\images\systems\wine-base
 docker image push caaarrrlll/wine-baseimage:latest
 ```
 
 CI (`Build and push images`) runs on pushes to `main`, `v*` tags, and manual
 dispatch. On a normal push it only rebuilds affected images and their
 dependents: Debian changes trigger debian → wine → asa; Wine changes trigger
-wine → asa; Fedora is independent. Tag pushes and manual runs build everything.
-It expects repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+wine → asa; Fedora is independent and is excluded from tag/manual chains unless
+the `build_fedora` input is checked. It expects repository secrets
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
 ## Conventions
 
@@ -90,10 +91,10 @@ It expects repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
   `--no-install-recommends` (Debian) / `--setopt=install_weak_deps=False`
   (Fedora) and clean package caches in the same layer.
 - Locale is set to `en_US.UTF-8` in the base images.
-- `images/asa-docker` targets Unraid: it runs as `steam` with configurable
+- `images/games/asa-docker` targets Unraid: it runs as `steam` with configurable
   `UID`/`GID`, uses `screen`/`xvfb`/Wine, and installs ARK ASA (app id
   `2430930`) into `/serverdata`.
-- `images/asa-docker` is designed around the Unraid Docker template format
+- `images/games/asa-docker` is designed around the Unraid Docker template format
   (env vars such as `GAME_ID`, `GAME_PARAMS`, `UID`, `GID`, `VALIDATE`).
 - Each image has an `audit.md`. Update it in the same change that modifies a
   Dockerfile, script, or image tag.
@@ -107,11 +108,16 @@ It expects repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 - The Dockerfiles' `FROM` lines intentionally reference `caaarrrlll/...`
   images. Only the tags built/pushed by the scripts use `DOCKERHUB_USER`, so a
   fork builds on the maintainer's public base images rather than its own.
+- Fedora CI is intentionally opt-in: the `build_fedora` input defaults to
+  `false`, and Fedora is excluded from tag/manual chains because the image is
+  not currently used and still consumes Actions job time. Re-enable it when
+  Fedora is actually needed by setting the input default to `true` or adding
+  Fedora back to the chain conditions.
 - Containers share the Unraid host kernel; no Dockerfile change can upgrade it.
   See `docs/discussion.md` for the NTSYNC / kernel 6.18 context.
-- `images/fedora-base` labels/README still reference the Debian base
+- `images/systems/fedora-base` labels/README still reference the Debian base
   (copy-paste leftovers) — verify before relying on image metadata.
-- `images/asa-docker` ships default game passwords and logs secrets when
+- `images/games/asa-docker` ships default game passwords and logs secrets when
   `DEBUG=1`. This is **accepted**: the Unraid template overrides the passwords
   and `DEBUG` defaults to `0`. See its `audit.md` before changing this behavior.
 - Builds should run against the local Docker context (`docker context use

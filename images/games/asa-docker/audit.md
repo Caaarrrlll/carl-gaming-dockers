@@ -7,7 +7,7 @@
 | Source repo | `Caaarrrlll/docker-steamcmd` |
 | Docker Hub image | `caaarrrlll/asa-wine:latest` |
 | Base image | `caaarrrlll/wine-baseimage:latest` |
-| Build context | `docker-steamcmd/` |
+| Build context | `images/games/asa-docker/` |
 | Game | ARK: Survival Ascended, app id `2430930` |
 | Last audited | 2026-11-07 |
 

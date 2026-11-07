@@ -28,10 +28,10 @@ error() {
 
 trap error ERR
 
-buildpush "images/debian-base" "${DOCKERHUB_USER}/debian-slim-baseimage:trixie-latest"
-buildpush "images/fedora-base" "${DOCKERHUB_USER}/fedora-baseimage:latest"
-buildpush "images/wine-base" "${DOCKERHUB_USER}/wine-baseimage:latest"
-buildpush "images/asa-docker" "${DOCKERHUB_USER}/asa-wine:latest"
+buildpush "images/systems/debian-base" "${DOCKERHUB_USER}/debian-slim-baseimage:trixie-latest"
+buildpush "images/systems/fedora-base" "${DOCKERHUB_USER}/fedora-baseimage:latest"
+buildpush "images/systems/wine-base" "${DOCKERHUB_USER}/wine-baseimage:latest"
+buildpush "images/games/asa-docker" "${DOCKERHUB_USER}/asa-wine:latest"
 
 echo
 echo "All images built and pushed."

@@ -7,7 +7,7 @@
 | Source repo | `Caaarrrlll/wine-baseimage` |
 | Docker Hub image | `caaarrrlll/wine-baseimage:latest` |
 | Base image | `caaarrrlll/debian-slim-baseimage:trixie-latest` |
-| Build context | `wine-baseimage/` |
+| Build context | `images/systems/wine-base/` |
 | Last audited | 2026-11-07 |
 
 ## Current snapshot

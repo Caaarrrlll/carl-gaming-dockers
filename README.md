@@ -7,10 +7,10 @@ dedicated server under Wine on **Unraid**.
 
 | Path | Docker Hub image | Base |
 |---|---|---|
-| `images/debian-base` | `caaarrrlll/debian-slim-baseimage:trixie-latest` | `debian:trixie-slim` |
-| `images/fedora-base` | `caaarrrlll/fedora-baseimage:latest` | `fedora:44` |
-| `images/wine-base` | `caaarrrlll/wine-baseimage:latest` | `caaarrrlll/debian-slim-baseimage:trixie-latest` |
-| `images/asa-docker` | `caaarrrlll/asa-wine:latest` | `caaarrrlll/wine-baseimage:latest` |
+| `images/systems/debian-base` | `caaarrrlll/debian-slim-baseimage:trixie-latest` | `debian:trixie-slim` |
+| `images/systems/fedora-base` | `caaarrrlll/fedora-baseimage:latest` | `fedora:44` |
+| `images/systems/wine-base` | `caaarrrlll/wine-baseimage:latest` | `caaarrrlll/debian-slim-baseimage:trixie-latest` |
+| `images/games/asa-docker` | `caaarrrlll/asa-wine:latest` | `caaarrrlll/wine-baseimage:latest` |
 
 ## Dependency chain
 
@@ -59,12 +59,14 @@ usual. If you want to build the whole chain from your own bases, update the
 CI uses `.github/workflows/build-images.yml` instead. On a push it rebuilds only
 the affected images, in dependency order: a Debian change rebuilds debian →
 wine → asa, a Wine change rebuilds wine → asa, and a Fedora change rebuilds
-Fedora only. Tag pushes and manual dispatches build everything. CI expects the
-`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
+Fedora only. Tag pushes and manual dispatches rebuild debian → wine → asa;
+Fedora is excluded unless you tick `build_fedora` on a manual run. CI expects
+the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
 
 ## Layout
 
-- `images/` — one directory per published image.
+- `images/systems/` — shared runtime/base images.
+- `images/games/` — per-game images layered on the system images.
 - `scripts/` — build/push helpers.
 - `docs/` — design notes and migration plan.
 - `AGENTS.md` — contributor/agent overview.

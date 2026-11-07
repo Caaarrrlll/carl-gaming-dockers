@@ -7,7 +7,7 @@
 | Source repo | `Caaarrrlll/docker-fedora-baseimage` |
 | Docker Hub image | `caaarrrlll/fedora-baseimage:latest` (assumed) |
 | Base image | `fedora:44` |
-| Build context | `docker-fedora-baseimage/` |
+| Build context | `images/systems/fedora-base/` |
 | Last audited | 2026-11-07 |
 
 ## Current snapshot

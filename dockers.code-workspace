@@ -6,19 +6,19 @@
 		},
 		{
 			"name": "Debian Base Image",
-			"path": "images/debian-base"
+			"path": "images/systems/debian-base"
 		},
 		{
 			"name": "Fedora Base Image",
-			"path": "images/fedora-base"
+			"path": "images/systems/fedora-base"
 		},
 		{
 			"name": "Wine Base Image",
-			"path": "images/wine-base"
+			"path": "images/systems/wine-base"
 		},
 		{
 			"name": "ASA Docker / ARK: Survival Ascended",
-			"path": "images/asa-docker"
+			"path": "images/games/asa-docker"
 		}
 	],
 	"settings": {
