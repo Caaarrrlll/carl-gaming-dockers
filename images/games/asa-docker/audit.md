@@ -25,7 +25,7 @@
 
 | Date | Commit | Change | Notes |
 |---|---|---|---|
-| 2026-11-07 | _(this change)_ | add `NTSYNC` env flag | `start-server.sh` checks `/dev/ntsync` when `NTSYNC=1`, exports `WINENTSYNC=1`, warns and falls back to ESync/FSync when the device is missing; default `0` (disabled). Host must `modprobe ntsync` and pass `--device /dev/ntsync`. |
+| 2026-11-07 | _(this change)_ | add `NTSYNC` env flag | `start-server.sh` checks `/dev/ntsync` when `NTSYNC=1`, exports `WINENTSYNC=1`, warns and falls back to ESync/FSync when the device is missing; default `0` (disabled). Host must `modprobe ntsync` and pass `--device=/dev/ntsync`. |
 | 2026-08-09 | `6c282ba` | change validation | |
 | 2026-08-09 | `8e3499d` | add steam validate | |
 | 2026-07-25 | `f104ee0` | add xdg folder | |

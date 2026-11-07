@@ -39,7 +39,7 @@ if [ "${NTSYNC}" == "1" ]; then
     echo
     echo "echo \"modprobe ntsync\" >> /boot/config/go"
     echo
-    echo "| and that the container is started with '--device /dev/ntsync'"
+    echo "| and that the container is started with '--device=/dev/ntsync'"
     echo "| (Unraid template: Extra Parameters)."
     echo "|"
     echo "| Falling back to ESync/FSync."

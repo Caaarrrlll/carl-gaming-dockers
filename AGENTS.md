@@ -24,7 +24,15 @@ Supporting files:
 - `.github/workflows/build-images.yml` — CI build/push workflow.
 - `scripts/docker-updater.bat` — builds and pushes all images (Windows).
 - `scripts/docker-updater.sh` — builds and pushes all images (Linux/macOS).
-- `docs/discussion.md` — Wine/Proton on Unraid, kernel/NTSYNC notes.
+- `docs/housekeeping.md` — open verification items carried out of the
+  NTSYNC/Wine 11 migration (reboot-persistence test, under-load re-check,
+  parked Fedora work). **Check/confirm these items later** — item 1 is a
+  functional dependency on every Unraid reboot.
+- `HISTORY.md` — consolidated, dated record of significant decisions and
+  upgrades.
+- `docs/history/` — completed long-running-upgrade working docs, kept for
+  reference (the NTSYNC/Wine 11 one doubles as a reusable template, e.g.
+  `docs/history/2026-11-07-ntsync-wine11.md`).
 - `images/*/*/audit.md` — per-image snapshot, change log, and review checklist.
 
 ## Image dependency chain
@@ -97,6 +105,12 @@ the `build_fedora` input is checked. It expects repository secrets
   (env vars such as `GAME_ID`, `GAME_PARAMS`, `UID`, `GID`, `VALIDATE`).
 - Each image has an `audit.md`. Update it in the same change that modifies a
   Dockerfile, script, or image tag.
+- When a long-running upgrade or migration completes, condense its outcome into
+  `HISTORY.md`, then tidy up the tracking docs: move the completed working doc
+  under `docs/history/` named **date-first** (`YYYY-MM-DD-<topic>.md`, e.g.
+  `2026-11-07-ntsync-wine11.md`) so files sort chronologically, reference it
+  from `HISTORY.md`, and delete temp/superseded files. Carry any still-open
+  verification work into `docs/housekeeping.md` instead of deleting it.
 
 ## Notes / gotchas
 
@@ -113,7 +127,8 @@ the `build_fedora` input is checked. It expects repository secrets
   Fedora is actually needed by setting the input default to `true` or adding
   Fedora back to the chain conditions.
 - Containers share the Unraid host kernel; no Dockerfile change can upgrade it.
-  See `docs/discussion.md` for the NTSYNC / kernel 6.18 context.
+  See `docs/history/2026-11-07-ntsync-wine11.md` for the NTSYNC / kernel 6.18
+  context.
 - `images/systems/fedora-base` labels/README still reference the Debian base
   (copy-paste leftovers) — verify before relying on image metadata.
 - `images/games/asa-docker` ships default game passwords and logs secrets when
